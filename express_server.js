@@ -47,8 +47,8 @@ app.get("/urls/:shortURL", (req, res) => {
 //Form submission to create the shortURL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  const longURL = req.body["longURL"];
-  urlDatabase[shortURL] = `//${longURL}`; // Updating URL database with a shortURL:longURL pair
+  const longURL = req.body["longURL"]; // Updating URL database with a shortURL:longURL pair
+  urlDatabase[shortURL] = `//${longURL}`; // Found a workaround to bypass urls that are missing "http://"
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -65,7 +65,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//Function to generate random 6-digit alpha key
+//Function to generate random 6-digit alpha key:
 function generateRandomString() {
   let str = "";
   const alpha =
