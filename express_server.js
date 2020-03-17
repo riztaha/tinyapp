@@ -1,10 +1,13 @@
 const express = require("express");
+const morgan = require("morgan");
+
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(morgan("combined"));
 
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -15,7 +18,7 @@ app.get("/", (req, res) => {
   res.redirect(`/urls/`);
 });
 
-//Router listing all short/long urls.
+//Router listing all s`hort/long urls.
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
@@ -59,6 +62,8 @@ app.post("/urls", (req, res) => {
   //   }
   res.redirect(`/urls/${shortURL}`);
 });
+
+// app.post();
 
 //Redirect to the longURL
 app.get("/u/:shortURL", (req, res) => {
