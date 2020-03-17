@@ -65,7 +65,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//Function to generate random 6-digit alpha key:
+//Function to generate random 6-digit alpha key
 function generateRandomString() {
   let str = "";
   const alpha =
