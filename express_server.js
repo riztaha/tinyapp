@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -11,7 +12,7 @@ const urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect(`/urls/`);
 });
 
 //Router listing all short/long urls.
@@ -29,11 +30,12 @@ app.get("/hello", (req, res) => {
   res.render("hello_world", templateVars);
 });
 
+//Page to create a new URL
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-//Router for specific short-long url
+//Site specific for short-long url
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
@@ -42,10 +44,21 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//Post route to form submission
+//Form submission to create the shortURL
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  const shortURL = generateRandomString();
+  const longURL = req.body["longURL"];
+  urlDatabase[shortURL] = `//${longURL}`; // Updating URL database with a shortURL:longURL pair
+  res.redirect(`/urls/${shortURL}`);
+});
+
+//Redirect to the longURL
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL];
+  console.log(longURL);
+  res.redirect(longURL);
+  //   const longURL = req.body["longURL"];
 });
 
 app.listen(PORT, () => {
@@ -55,7 +68,8 @@ app.listen(PORT, () => {
 //Function to generate random 6-digit alpha key:
 function generateRandomString() {
   let str = "";
-  const alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const alpha =
+    "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (let i = 0; i < 6; i++) {
     str += alpha.charAt(Math.floor(Math.random() * alpha.length));
   }
