@@ -18,7 +18,7 @@ app.get("/", (req, res) => {
   res.redirect(`/urls/`);
 });
 
-//Router listing all s`hort/long urls.
+//Index listing all short/long urls.
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
@@ -33,12 +33,12 @@ app.get("/hello", (req, res) => {
   res.render("hello_world", templateVars);
 });
 
-//Page to create a new URL
+//Page to create a new short URL
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-//Site specific for short-long url
+//Site specific to show short-long url
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
@@ -49,8 +49,9 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //Form submission to create the shortURL
 app.post("/urls", (req, res) => {
+  // Updating URL database with a shortURL:longURL pair
   const shortURL = generateRandomString();
-  const longURL = req.body["longURL"]; // Updating URL database with a shortURL:longURL pair
+  const longURL = req.body["longURL"];
   // For edge-cases with urls that are missing "http://" or that are empty
   if (longURL[0] === "h" || longURL[6] === "/") {
     urlDatabase[shortURL] = longURL;
@@ -77,7 +78,21 @@ app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL];
   res.redirect(longURL);
-  //   const longURL = req.body["longURL"];
+});
+
+// Post for NEW LONG URL submit form
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const newLongURL = req.body.newLongURL;
+  // Edge-cases if new long URL is missing "http://" or is blank
+  if (newLongURL[0] === "h" || newLongURL[6] === "/") {
+    urlDatabase[id] = newLongURL;
+  } else if (newLongURL === "") {
+    res.redirect(`/urls/${id}`);
+  } else {
+    urlDatabase[id] = newLongURL;
+  }
+  res.redirect("/urls/");
 });
 
 app.listen(PORT, () => {
