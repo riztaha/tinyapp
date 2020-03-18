@@ -1,8 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
-const { users } = require("./users");
-
+// const { users } = require("./users");
 const app = express();
 const PORT = 8080; // default port 8080
 app.set("view engine", "ejs");
@@ -15,6 +14,19 @@ app.use(cookieParser());
 const urlDatabase = {
   b2xVn2: "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+
+const users = {
+  userRandomID: {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  user2RandomID: {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
 };
 
 app.get("/", (req, res) => {
@@ -115,6 +127,17 @@ app.listen(PORT, () => {
 
 app.get("/register", (req, res) => {
   res.render("register");
+});
+
+app.post("/register", (req, res) => {
+  const randID = generateRandomString();
+  users[randID] = {
+    id: randID,
+    email: req.body.email,
+    password: req.body.password
+  };
+  console.log(users);
+  res.redirect("/urls");
 });
 
 //Function to generate random 6-digit alpha key:
