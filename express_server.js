@@ -1,9 +1,10 @@
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
-// const { users } = require("./users");
 const app = express();
 const PORT = 8080; // default port 8080
+// const fs = require("fs");
+// const { users } = require("./users");
 app.set("view engine", "ejs");
 
 const bodyParser = require("body-parser");
@@ -136,6 +137,12 @@ app.post("/register", (req, res) => {
     email: req.body.email,
     password: req.body.password
   };
+  res.cookie("user_id", randID);
+  // fs.appendFile(
+  //   "users.js",
+  //   `{users[${randID}] = {id: ${randID}, email: ${req.body.email}, password: ${req.body.password}
+  // };`
+  // );
   console.log(users);
   res.redirect("/urls");
 });

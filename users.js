@@ -12,3 +12,5 @@ const users = {
 };
 
 module.exports = { users };
+{users[LId3Xt] = {id: LId3Xt, email: dsadas@dasd, password: a12321
+  };
