@@ -51,10 +51,12 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const longURL = req.body["longURL"]; // Updating URL database with a shortURL:longURL pair
+  // For edge-cases with urls that are missing "http://" or that are empty
   if (longURL[0] === "h" || longURL[6] === "/") {
     urlDatabase[shortURL] = longURL;
+  } else if (longURL === "") {
+    res.redirect(`/urls/new`);
   } else {
-    // Found a workaround to bypass urls that are missing "http://"
     urlDatabase[shortURL] = `http://${longURL}`;
   }
   //   if (res.redirect(longURL) === res.status(404)) {  // Tried implementing edge-case of bad longURL
