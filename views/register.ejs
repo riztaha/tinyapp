@@ -1,0 +1,43 @@
+<!DOCTYPE = html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+        <title>TinyApp - Register</title>
+    </head>
+    <header>
+        <nav class="navbar navbar-expand-md navbar-dark bg-success">
+          <a class="navbar-brand" href="/urls">TinyApp</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </header>
+    <body>
+        <main style="margin: 1em;">
+        <div class="form-group">
+            <div class="card-body">
+                <h3>Register for TinyApp</h3>
+                <div class="card text-center">
+                    <div class="card-body">
+                        <div class="form-group">
+                        <form class="form-center" action="/register" method="POST">
+                        <label for="email">Email:</label>
+                        <input id="email" type="text" name="email" placeholder="email@site.com"/>
+                        </div>
+      
+                    </div>
+                    <div>
+                    <label for="password">TinyApp Password:</label>
+                    <input id="password" type="password" name="password" placeholder="new password">
+                    <div>
+                    <button style="margin: 1em" type="submit" class="btn btn-primary">Register</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </main>
+   </body>
+</html>

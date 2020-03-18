@@ -1,6 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const { users } = require("./users");
 
 const app = express();
 const PORT = 8080; // default port 8080
@@ -29,11 +30,6 @@ app.get("/urls", (req, res) => {
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
-
-// app.get("/hello", (req, res) => {
-//   let templateVars = { greeting: "Hello World!" };
-//   res.render("hello_world", templateVars);
-// });
 
 //Page to create a new short URL
 app.get("/urls/new", (req, res) => {
@@ -115,6 +111,10 @@ app.post("/logout", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
+});
+
+app.get("/register", (req, res) => {
+  res.render("register");
 });
 
 //Function to generate random 6-digit alpha key:
