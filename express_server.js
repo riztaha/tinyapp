@@ -17,12 +17,12 @@ const urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  res.redirect(`/urls/`);
+  res.redirect("/urls/");
 });
 
 //Index listing all short/long urls.
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
   res.render("urls_index", templateVars);
 });
 
@@ -30,21 +30,23 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  let templateVars = { greeting: "Hello World!" };
-  res.render("hello_world", templateVars);
-});
+// app.get("/hello", (req, res) => {
+//   let templateVars = { greeting: "Hello World!" };
+//   res.render("hello_world", templateVars);
+// });
 
 //Page to create a new short URL
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  let templateVars = { username: req.cookies["username"] };
+  res.render("urls_new", templateVars);
 });
 
 //Site specific to show short-long url
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]
+    longURL: urlDatabase[req.params.shortURL],
+    username: req.cookies["username"]
   };
   res.render("urls_show", templateVars);
 });
@@ -98,11 +100,11 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // let user = "";
-  // if (req.cookies.username) {
-  //   user = req.cookies.username;
-  // }
-  res.cookie("username", req.body.username);
+  let username = "";
+  if (req.body.username) {
+    username = req.body.username;
+  }
+  res.cookie("username", username);
   res.redirect("/urls/");
 });
 
