@@ -1,3 +1,4 @@
+const bcrypt = require("bcrypt");
 const createError = require("http-errors");
 const express = require("express");
 const morgan = require("morgan");
@@ -26,13 +27,13 @@ const urlDatabase = {
 const users = {
   aJ48lW: {
     id: "aJ48lW",
-    email: "email",
-    password: "password"
+    email: "a@a.com",
+    password: "$2b$10$QcH8TGZZUwrGaS.Jwbif3.BJLbpR7atDwksgVfwrLrSNKhvGi8owC" //123456
   },
   user2RandomID: {
     id: "user2RandomID",
-    email: "user2@example.com",
-    password: "dishwasher-funk"
+    email: "b@b.com",
+    password: "$2b$10$N5zzFnclxHFtOzYmb.N0fuDS.qccTK0h6217jFa1fwcQpnMKhSlZO" // qwerty
   }
 };
 
@@ -165,7 +166,7 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   let email = req.body.email;
   let pass = req.body.password;
-  if (emailMatch(email, null) && emailMatch(null, pass)) {
+  if (loginMatch(email, pass)) {
     let userID = findUserID(email); //Using the functions @ bottom of page
     res.cookie("user_id", userID);
     res.redirect("/urls");
@@ -194,7 +195,7 @@ app.post("/register", (req, res) => {
   if (
     !req.body.email[4] || // If email input doesn't have 5 chars
     !req.body.password[5] || // If password input is less than 6 chars
-    emailMatch(req.body.email, null) // If email exists in system
+    isEmailDuplicate(req.body.email) // If email exists in system
   ) {
     res.status(400).redirect("error");
   } else {
@@ -202,7 +203,7 @@ app.post("/register", (req, res) => {
     users[randID] = {
       id: randID,
       email: req.body.email,
-      password: req.body.password
+      password: bcrypt.hashSync(req.body.password, 10)
     };
     res.cookie("user_id", randID);
     // fs.appendFile(
@@ -241,13 +242,22 @@ function generateRandomString() {
   return str;
 }
 
-//Function to lookup email/pass in database:
-function emailMatch(email, pass) {
+function isEmailDuplicate(email) {
   for (let key in users) {
     if (email === users[key].email) {
       return true;
     }
-    if (pass === users[key].password) {
+  }
+  return false;
+}
+
+//Function to match the password to the email provided:
+function loginMatch(email, pass) {
+  for (let key in users) {
+    if (
+      email === users[key].email &&
+      bcrypt.compareSync(pass, users[key].password)
+    ) {
       return true;
     }
   }
