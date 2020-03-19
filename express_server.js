@@ -36,7 +36,10 @@ app.get("/", (req, res) => {
 
 //Index listing all short/long urls.
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies["username"] };
+  let templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies["user_id"]]
+  };
   res.render("urls_index", templateVars);
 });
 
@@ -46,7 +49,9 @@ app.get("/urls.json", (req, res) => {
 
 //Page to create a new short URL
 app.get("/urls/new", (req, res) => {
-  let templateVars = { username: req.cookies["username"] };
+  let templateVars = {
+    user: users[req.cookies["user_id"]]
+  };
   res.render("urls_new", templateVars);
 });
 
@@ -55,7 +60,7 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"]
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_show", templateVars);
 });
@@ -79,7 +84,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-//Delete function
+//Delete URL function
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
@@ -109,16 +114,15 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  let username = "";
-  if (req.body.username) {
-    username = req.body.username;
+  let user = "";
+  if (req.body.user) {
+    user = req.body.user;
   }
-  res.cookie("username", username);
   res.redirect("/urls/");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls/");
 });
 
@@ -127,10 +131,15 @@ app.listen(PORT, () => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("register");
+  let templateVars = { user: users[req.cookies["user_id"]] };
+  res.render("register", templateVars);
 });
 
 app.post("/register", (req, res) => {
+  // if (!req.body.email[3] || !req.body.password[4]) {
+
+  // }
+  // else if ()
   const randID = generateRandomString();
   users[randID] = {
     id: randID,
