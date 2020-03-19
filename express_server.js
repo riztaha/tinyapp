@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080; // default port 8080
 // const fs = require("fs");
-// const { users } = require("./users");
+// const { users } = require("./users"); //Tried storing user data in external file.
 app.set("view engine", "ejs");
 
 const bodyParser = require("body-parser");
@@ -79,9 +79,6 @@ app.post("/urls", (req, res) => {
   } else {
     urlDatabase[shortURL] = `http://${longURL}`;
   }
-  //   if (res.redirect(longURL) === res.status(404)) {  // Tried implementing edge-case of bad longURL
-  //     console.log("This site does not exist");
-  //   }
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -114,12 +111,21 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls/");
 });
 
+app.get("/login", (req, res) => {
+  res.render("login");
+});
+
 app.post("/login", (req, res) => {
-  let user = "";
-  if (req.body.user) {
-    user = req.body.user;
+  let email = req.body.email;
+  let pass = req.body.password;
+  if (emailMatch(email, pass)) {
+    let userID = findUserID(email); //Using the functions @ bottom of page
+    res.cookie("user_id", userID);
+    res.redirect("/urls");
+  } else {
+    res.status(403).send("Error 403: Incorrect email/password");
+    // res.render("error", 403);
   }
-  res.redirect("/urls/");
 });
 
 app.post("/logout", (req, res) => {
@@ -131,6 +137,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
+//For the registration page
 app.get("/register", (req, res) => {
   let templateVars = { user: users[req.cookies["user_id"]] };
   res.render("register", templateVars);
@@ -138,12 +145,11 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   if (
-    !req.body.email[3] ||
-    !req.body.password[5] ||
-    emailMatch(req.body.email)
+    !req.body.email[4] || // If email input doesn't have 5 chars
+    !req.body.password[5] || // If password input is less than 6 chars
+    emailMatch(req.body.email, null) // If email exists in system
   ) {
-    res.statusCode = 400;
-    res.redirect("/error");
+    res.status(400).redirect("error");
   } else {
     const randID = generateRandomString();
     users[randID] = {
@@ -162,11 +168,7 @@ app.post("/register", (req, res) => {
   }
 });
 
-// app.get("/error", (req, res) => {
-//   res.render("/error");
-// });
-
-// catch 404 and forward to error handler
+// catch 400 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(400));
 });
@@ -193,11 +195,24 @@ function generateRandomString() {
   return str;
 }
 
-//Function to lookup email in database:
-function emailMatch(arg) {
+//Function to lookup email/pass in database:
+function emailMatch(email, pass) {
   for (let keys in users) {
-    if (arg === users[keys].email) {
+    if (email === users[keys].email && pass === users[keys].password) {
       return true;
+    }
+    if (email === users[keys].email) {
+      return true;
+    }
+  }
+  return false;
+}
+
+//Function to find matching UserID by email.
+function findUserID(email) {
+  for (let keys in users) {
+    if (email === users[keys].email) {
+      return users[keys].id;
     }
   }
   return false;
