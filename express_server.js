@@ -8,6 +8,11 @@ const PORT = 8080; // default port 8080
 // const { users } = require("./users"); //Tried storing user data in external file.
 app.set("view engine", "ejs");
 
+//Need help with settimeout to go to error page and back to main page
+//Need help.. How do I make the urls on the index hyperlinks? <a href=????
+//Need help fixing layout of buttons
+//Need help changing location of databases
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan("dev"));
@@ -188,7 +193,6 @@ app.post("/register", (req, res) => {
     //   `{users[${randID}] = {id: ${randID}, email: ${req.body.email}, password: ${req.body.password}
     // };`
     // );
-    console.log(users);
     res.redirect("/urls");
   }
 });
@@ -222,11 +226,11 @@ function generateRandomString() {
 
 //Function to lookup email/pass in database:
 function emailMatch(email, pass) {
-  for (let keys in users) {
-    if (email === users[keys].email && pass === users[keys].password) {
+  for (let key in users) {
+    if (email === users[key].email && pass === users[key].password) {
       return true;
     }
-    if (email === users[keys].email) {
+    if (email === users[key].email) {
       return true;
     }
   }
@@ -235,10 +239,21 @@ function emailMatch(email, pass) {
 
 //Function to find matching UserID by email.
 function findUserID(email) {
-  for (let keys in users) {
-    if (email === users[keys].email) {
-      return users[keys].id;
+  for (let key in users) {
+    if (email === users[key].email) {
+      return users[key].id;
     }
   }
   return false;
+}
+
+//Function to find matching URLs for specific UserID
+function urlsForUser(id) {
+  let matchingURLS = [];
+  for (let key in urlDatabase) {
+    if (id === urlDatabase[key].userID) {
+      matchingURLS.push(urlDatabase[key].longURL);
+    }
+  }
+  return matchingURLS;
 }
