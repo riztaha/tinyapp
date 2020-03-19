@@ -107,7 +107,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   ) {
     delete urlDatabase[shortURL];
     res.redirect("/urls/");
-  } else res.redirect("/login");
+  } else res.send(404).redirect("/login");
 });
 
 //Redirect to the website at longURL
@@ -165,7 +165,7 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   let email = req.body.email;
   let pass = req.body.password;
-  if (emailMatch(email, pass)) {
+  if (emailMatch(email, null) && emailMatch(null, pass)) {
     let userID = findUserID(email); //Using the functions @ bottom of page
     res.cookie("user_id", userID);
     res.redirect("/urls");
@@ -244,10 +244,10 @@ function generateRandomString() {
 //Function to lookup email/pass in database:
 function emailMatch(email, pass) {
   for (let key in users) {
-    if (email === users[key].email && pass === users[key].password) {
+    if (email === users[key].email) {
       return true;
     }
-    if (email === users[key].email) {
+    if (pass === users[key].password) {
       return true;
     }
   }
