@@ -1,3 +1,4 @@
+const createError = require("http-errors");
 const express = require("express");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
@@ -136,24 +137,49 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  // if (!req.body.email[3] || !req.body.password[4]) {
+  if (
+    !req.body.email[3] ||
+    !req.body.password[5] ||
+    emailMatch(req.body.email)
+  ) {
+    res.statusCode = 400;
+    res.redirect("/error");
+  } else {
+    const randID = generateRandomString();
+    users[randID] = {
+      id: randID,
+      email: req.body.email,
+      password: req.body.password
+    };
+    res.cookie("user_id", randID);
+    // fs.appendFile(
+    //   "users.js",
+    //   `{users[${randID}] = {id: ${randID}, email: ${req.body.email}, password: ${req.body.password}
+    // };`
+    // );
+    console.log(users);
+    res.redirect("/urls");
+  }
+});
 
-  // }
-  // else if ()
-  const randID = generateRandomString();
-  users[randID] = {
-    id: randID,
-    email: req.body.email,
-    password: req.body.password
-  };
-  res.cookie("user_id", randID);
-  // fs.appendFile(
-  //   "users.js",
-  //   `{users[${randID}] = {id: ${randID}, email: ${req.body.email}, password: ${req.body.password}
-  // };`
-  // );
-  console.log(users);
-  res.redirect("/urls");
+// app.get("/error", (req, res) => {
+//   res.render("/error");
+// });
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  next(createError(400));
+});
+
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get("env") === "development" ? err : {};
+
+  // render the error page
+  res.status(err.status || 500 || 400);
+  res.render("error");
 });
 
 //Function to generate random 6-digit alpha key:
@@ -165,4 +191,14 @@ function generateRandomString() {
     str += alpha.charAt(Math.floor(Math.random() * alpha.length));
   }
   return str;
+}
+
+//Function to lookup email in database:
+function emailMatch(arg) {
+  for (let keys in users) {
+    if (arg === users[keys].email) {
+      return true;
+    }
+  }
+  return false;
 }
