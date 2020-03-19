@@ -19,17 +19,15 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 
 const urlDatabase = {
-  // b2xVn2: "http://www.lighthouselabs.ca",
-  // "9sm5xK": "http://www.google.com",
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
-  userRandomID: {
-    id: "userRandomID",
-    email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+  aJ48lW: {
+    id: "aJ48lW",
+    email: "email",
+    password: "password"
   },
   user2RandomID: {
     id: "user2RandomID",
@@ -46,7 +44,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   if (users[req.cookies["user_id"]]) {
     let templateVars = {
-      urls: urlDatabase,
+      urls: urlsForUser(users[req.cookies["user_id"]].id), //Printing out only the urls for logged in user
       user: users[req.cookies["user_id"]]
     };
     res.render("urls_index", templateVars);
@@ -55,6 +53,10 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
+});
+
+app.get("/users.json", (req, res) => {
+  res.json(users);
 });
 
 //Page to create a new short URL
@@ -84,17 +86,18 @@ app.post("/urls", (req, res) => {
     const shortURL = generateRandomString();
     const longURL = req.body["longURL"];
     // For edge-cases with urls that are missing "http://" or that are empty
+    if (longURL === "") {
+      res.redirect(`/urls/new`);
+    }
     if (longURL[0] === "h" || longURL[6] === "/") {
       urlDatabase[shortURL] = {
         longURL: longURL,
-        userID: users[req.cookies["user_id"]]
+        userID: users[req.cookies["user_id"]].id
       };
-    } else if (longURL === "") {
-      res.redirect(`/urls/new`);
     } else {
       urlDatabase[shortURL] = {
         longURL: `http://${longURL}`,
-        userID: users[req.cookies["user_id"]]
+        userID: users[req.cookies["user_id"]].id
       };
     }
     res.redirect(`/urls/${shortURL}`);
@@ -123,18 +126,20 @@ app.post("/urls/:id", (req, res) => {
   if (users[req.cookies["user_id"]]) {
     const id = req.params.id;
     const newLongURL = req.body.newLongURL;
+    if (newLongURL === "") {
+      res.redirect(`/urls/${id}`);
+    }
+
     // Edge-cases if new long URL is missing "http://" or is blank
     if (newLongURL[0] === "h" || newLongURL[6] === "/") {
       urlDatabase[id] = {
         longURL: newLongURL,
-        userID: users[req.cookies["user_id"]]
+        userID: users[req.cookies["user_id"]].id
       };
-    } else if (newLongURL === "") {
-      res.redirect(`/urls/${id}`);
     } else {
       urlDatabase[id] = {
         longURL: `http://${newLongURL}`,
-        userID: users[req.cookies["user_id"]]
+        userID: users[req.cookies["user_id"]].id
       };
       res.redirect("/urls/");
     }
@@ -249,10 +254,10 @@ function findUserID(email) {
 
 //Function to find matching URLs for specific UserID
 function urlsForUser(id) {
-  let matchingURLS = [];
+  let matchingURLS = {};
   for (let key in urlDatabase) {
     if (id === urlDatabase[key].userID) {
-      matchingURLS.push(urlDatabase[key].longURL);
+      matchingURLS[key] = urlDatabase[key];
     }
   }
   return matchingURLS;
