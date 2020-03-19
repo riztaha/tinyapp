@@ -5,7 +5,16 @@ const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const app = express();
 const PORT = 8080; // default port 8080
-// const fs = require("fs");
+const {
+  findUserID,
+  urlsForUser,
+  generateRandomString,
+  loginMatch,
+  isEmailDuplicate,
+  editURL,
+  addURL
+} = require("./helpers");
+
 // const { users } = require("./users"); //Tried storing user data in external file.
 app.set("view engine", "ejs");
 
@@ -50,7 +59,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   if (users[req.session["user_id"]]) {
     let templateVars = {
-      urls: urlsForUser(users[req.session["user_id"]].id), //Printing out only the urls for logged in user
+      urls: urlsForUser(users[req.session["user_id"]].id, urlDatabase), //Printing out only the urls for logged in user
       user: users[req.session["user_id"]]
     };
     res.render("urls_index", templateVars);
@@ -75,7 +84,7 @@ app.get("/urls/new", (req, res) => {
   } else res.redirect("/login");
 });
 
-//Site specific to show short-long url
+//Page that shows short-long url - with an edit button at bottom
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
@@ -96,15 +105,19 @@ app.post("/urls", (req, res) => {
       res.redirect(`/urls/new`);
     }
     if (longURL[0] === "h" || longURL[6] === "/") {
-      urlID = addURL(longURL, users[req.session["user_id"]].id);
+      urlID = addURL(longURL, users[req.session["user_id"]].id, urlDatabase);
     } else {
-      urlID = addURL(`http://${longURL}`, users[req.session["user_id"]].id);
+      urlID = addURL(
+        `http://${longURL}`,
+        users[req.session["user_id"]].id,
+        urlDatabase
+      );
     }
     res.redirect(`/urls/${urlID}`);
   } else res.redirect("/login");
 });
 
-//Delete URL function
+//Delete URL POST
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   if (
@@ -123,41 +136,28 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
-function addURL(longUrl, userId) {
-  const id = generateRandomString();
-  urlDatabase[id] = {
-    longURL: longUrl,
-    userID: userId
-  };
-  return id;
-}
-
-function editURL(id, longUrl, userId) {
-  urlDatabase[id] = {
-    longURL: longUrl,
-    userID: userId
-  };
-}
-
 // Post for EDITING LONG URL submit form
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.newLongURL;
+  //If field is blank, keep refreshing page
   if (newLongURL === "") {
     res.redirect(`/urls/${shortURL}`);
   }
+  //If user that owns the shortURL is logged in then,
   if (
     users[req.session["user_id"]] &&
     users[req.session["user_id"]].id === urlDatabase[shortURL].userID
   ) {
-    // Edge-cases if new long URL is missing "http://" or is blank
+    // Edge-case if new long URL is missing "http://", then add it in and submit the newLongURL.
     if (newLongURL[0] === "h" || newLongURL[6] === "/") {
-      editURL(shortURL, newLongURL, users[req.session["user_id"]].id);
+      shortURL, newLongURL, users[req.session["user_id"]].id, urlDatabase;
     } else {
       editURL(
         shortURL,
         `http://${newLongURL}`,
-        users[req.session["user_id"]].id
+        users[req.session["user_id"]].id,
+        urlDatabase
       );
     }
     res.redirect("/urls/");
@@ -171,9 +171,10 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   let email = req.body.email;
   let pass = req.body.password;
-  if (loginMatch(email, pass)) {
-    let userID = findUserID(email); //Using the functions @ bottom of page
-    req.session.user_id = userID;
+  if (loginMatch(email, pass, users)) {
+    //Using helper function if login/pass are in database
+    let userID = findUserID(email, users); //Using helper function to identify their userID and set it
+    req.session.user_id = userID; //Setting encrypted cookie as the userID
     res.redirect("/urls");
   } else {
     res.status(403).send("Error 403: Incorrect email/password");
@@ -200,7 +201,7 @@ app.post("/register", (req, res) => {
   if (
     !req.body.email[4] || // If email input doesn't have 5 chars
     !req.body.password[5] || // If password input is less than 6 chars
-    isEmailDuplicate(req.body.email) // If email exists in system
+    isEmailDuplicate(req.body.email, users) // If email exists in system
   ) {
     res.status(400).redirect("error");
   } else {
@@ -236,56 +237,11 @@ app.use(function(err, req, res, next) {
   res.render("error");
 });
 
-//Function to generate random 6-digit alpha key:
-function generateRandomString() {
-  let str = "";
-  const alpha =
-    "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for (let i = 0; i < 6; i++) {
-    str += alpha.charAt(Math.floor(Math.random() * alpha.length));
-  }
-  return str;
-}
-
-function isEmailDuplicate(email) {
-  for (let key in users) {
-    if (email === users[key].email) {
-      return true;
-    }
-  }
-  return false;
-}
-
-//Function to match the password to the email provided:
-function loginMatch(email, pass) {
-  for (let key in users) {
-    if (
-      email === users[key].email &&
-      bcrypt.compareSync(pass, users[key].password)
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
-
-//Function to find matching UserID by email.
-function findUserID(email) {
-  for (let key in users) {
-    if (email === users[key].email) {
-      return users[key].id;
-    }
-  }
-  return false;
-}
-
-//Function to find matching URLs for specific UserID
-function urlsForUser(id) {
-  let matchingURLS = {};
-  for (let key in urlDatabase) {
-    if (id === urlDatabase[key].userID) {
-      matchingURLS[key] = urlDatabase[key];
-    }
-  }
-  return matchingURLS;
-}
+// function findUserID(email) {
+//   for (let key in users) {
+//     if (email === users[key].email) {
+//       return users[key].id;
+//     }
+//   }
+//   return false;
+// }
