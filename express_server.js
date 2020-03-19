@@ -14,8 +14,10 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  // b2xVn2: "http://www.lighthouselabs.ca",
+  // "9sm5xK": "http://www.google.com",
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
@@ -64,7 +66,7 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL].longURL,
     user: users[req.cookies["user_id"]]
   };
   res.render("urls_show", templateVars);
@@ -78,11 +80,17 @@ app.post("/urls", (req, res) => {
     const longURL = req.body["longURL"];
     // For edge-cases with urls that are missing "http://" or that are empty
     if (longURL[0] === "h" || longURL[6] === "/") {
-      urlDatabase[shortURL] = longURL;
+      urlDatabase[shortURL] = {
+        longURL: longURL,
+        userID: users[req.cookies["user_id"]]
+      };
     } else if (longURL === "") {
       res.redirect(`/urls/new`);
     } else {
-      urlDatabase[shortURL] = `http://${longURL}`;
+      urlDatabase[shortURL] = {
+        longURL: `http://${longURL}`,
+        userID: users[req.cookies["user_id"]]
+      };
     }
     res.redirect(`/urls/${shortURL}`);
   } else res.redirect("/login");
@@ -100,7 +108,8 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 //Redirect to the longURL
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL];
+
+  const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -111,13 +120,19 @@ app.post("/urls/:id", (req, res) => {
     const newLongURL = req.body.newLongURL;
     // Edge-cases if new long URL is missing "http://" or is blank
     if (newLongURL[0] === "h" || newLongURL[6] === "/") {
-      urlDatabase[id] = newLongURL;
+      urlDatabase[id] = {
+        longURL: newLongURL,
+        userID: users[req.cookies["user_id"]]
+      };
     } else if (newLongURL === "") {
       res.redirect(`/urls/${id}`);
     } else {
-      urlDatabase[id] = newLongURL;
+      urlDatabase[id] = {
+        longURL: `http://${newLongURL}`,
+        userID: users[req.cookies["user_id"]]
+      };
+      res.redirect("/urls/");
     }
-    res.redirect("/urls/");
   } else res.redirect("/login");
 });
 
