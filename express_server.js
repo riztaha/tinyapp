@@ -50,10 +50,12 @@ app.get("/urls.json", (req, res) => {
 
 //Page to create a new short URL
 app.get("/urls/new", (req, res) => {
-  let templateVars = {
-    user: users[req.cookies["user_id"]]
-  };
-  res.render("urls_new", templateVars);
+  if (users[req.cookies["user_id"]]) {
+    let templateVars = {
+      user: users[req.cookies["user_id"]]
+    };
+    res.render("urls_new", templateVars);
+  } else res.redirect("/login");
 });
 
 //Site specific to show short-long url
