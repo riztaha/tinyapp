@@ -81,68 +81,80 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //Form submission to create the shortURL
 app.post("/urls", (req, res) => {
+  let urlID = "";
   // Updating URL database with a shortURL:longURL pair
   if (users[req.cookies["user_id"]]) {
-    const shortURL = generateRandomString();
     const longURL = req.body["longURL"];
     // For edge-cases with urls that are missing "http://" or that are empty
     if (longURL === "") {
       res.redirect(`/urls/new`);
     }
     if (longURL[0] === "h" || longURL[6] === "/") {
-      urlDatabase[shortURL] = {
-        longURL: longURL,
-        userID: users[req.cookies["user_id"]].id
-      };
+      urlID = addURL(longURL, users[req.cookies["user_id"]].id);
     } else {
-      urlDatabase[shortURL] = {
-        longURL: `http://${longURL}`,
-        userID: users[req.cookies["user_id"]].id
-      };
+      urlID = addURL(`http://${longURL}`, users[req.cookies["user_id"]].id);
     }
-    res.redirect(`/urls/${shortURL}`);
+    res.redirect(`/urls/${urlID}`);
   } else res.redirect("/login");
 });
 
 //Delete URL function
 app.post("/urls/:shortURL/delete", (req, res) => {
-  if (users[req.cookies["user_id"]]) {
-    const shortURL = req.params.shortURL;
+  const shortURL = req.params.shortURL;
+  if (
+    users[req.cookies["user_id"]] &&
+    users[req.cookies["user_id"]].id === urlDatabase[shortURL].userID
+  ) {
     delete urlDatabase[shortURL];
     res.redirect("/urls/");
   } else res.redirect("/login");
 });
 
-//Redirect to the longURL
+//Redirect to the website at longURL
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
-// Post for NEW LONG URL submit form
-app.post("/urls/:id", (req, res) => {
-  if (users[req.cookies["user_id"]]) {
-    const id = req.params.id;
-    const newLongURL = req.body.newLongURL;
-    if (newLongURL === "") {
-      res.redirect(`/urls/${id}`);
-    }
+function addURL(longUrl, userId) {
+  const id = generateRandomString();
+  urlDatabase[id] = {
+    longURL: longUrl,
+    userID: userId
+  };
+  return id;
+}
 
+function editURL(id, longUrl, userId) {
+  urlDatabase[id] = {
+    longURL: longUrl,
+    userID: userId
+  };
+}
+
+// Post for EDITING LONG URL submit form
+app.post("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const newLongURL = req.body.newLongURL;
+  if (newLongURL === "") {
+    res.redirect(`/urls/${shortURL}`);
+  }
+  if (
+    users[req.cookies["user_id"]] &&
+    users[req.cookies["user_id"]].id === urlDatabase[shortURL].userID
+  ) {
     // Edge-cases if new long URL is missing "http://" or is blank
     if (newLongURL[0] === "h" || newLongURL[6] === "/") {
-      urlDatabase[id] = {
-        longURL: newLongURL,
-        userID: users[req.cookies["user_id"]].id
-      };
+      editURL(shortURL, newLongURL, users[req.cookies["user_id"]].id);
     } else {
-      urlDatabase[id] = {
-        longURL: `http://${newLongURL}`,
-        userID: users[req.cookies["user_id"]].id
-      };
-      res.redirect("/urls/");
+      editURL(
+        shortURL,
+        `http://${newLongURL}`,
+        users[req.cookies["user_id"]].id
+      );
     }
+    res.redirect("/urls/");
   } else res.redirect("/login");
 });
 
