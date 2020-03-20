@@ -28,3 +28,6 @@ TinyApp is a full stack web application built with Node and Express that allows 
 - You cannot create a new short URL unless you are registered/logged in.
 - You cannot visit /urls/shortURL unless you are registered/logged in.
 - You can share '/u/:shortURL' to redirect anyone to the long URL it is linked with. e.g. http://localhost:8080/u/i3BoGr will redirect people to https://www.google.ca/ 
+
+## Building this app
+- Required 4 full days of work. When I mean full, I mean spending 9+ hours/day tinkering, debugging, and hacking away at my laptop screen. This app could have easily been built by copy/pasting codes/scripts from other sources but building it from scratch with whatever knowledge I had resulted in a ton of learning.
