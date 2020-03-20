@@ -1,5 +1,4 @@
 const bcrypt = require("bcrypt");
-const createError = require("http-errors");
 const express = require("express");
 const morgan = require("morgan");
 const cookieSession = require("cookie-session");
@@ -15,13 +14,7 @@ const {
   addURL
 } = require("./helpers");
 
-// const { users } = require("./users"); //Tried storing user data in external file.
 app.set("view engine", "ejs");
-
-//Need help with settimeout to go to error page and back to main page
-//Need help.. How do I make the urls on the index hyperlinks? <a href=????
-//Need help fixing layout of buttons
-//Need help changing location of databases
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -51,6 +44,18 @@ const users = {
   }
 };
 
+// Accessing these will show us what urls & usernames/passwords are in the database.
+// Meant for testing purposes only. Anyone evaluating this app can uncomment
+// And check the links to see if the app works properly.
+
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
+
+// app.get("/users.json", (req, res) => {
+//   res.json(users);
+// });
+
 app.get("/", (req, res) => {
   res.redirect("/urls/");
 });
@@ -63,19 +68,11 @@ app.get("/urls", (req, res) => {
       user: users[req.session["user_id"]]
     };
     res.render("urls_index", templateVars);
-  } else res.redirect("/login");
+  } else
+    res.status(401).render("login", {
+      message: "You must be logged in to do that."
+    });
 });
-
-// Accessing these will show us what urls & usernames/passwords are in the database.
-// Meant for testing purposes only.
-
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
-// app.get("/users.json", (req, res) => {
-//   res.json(users);
-// });
 
 //Page to create a new short URL
 app.get("/urls/new", (req, res) => {
@@ -84,20 +81,29 @@ app.get("/urls/new", (req, res) => {
       user: users[req.session["user_id"]]
     };
     res.render("urls_new", templateVars);
-  } else res.redirect("/login");
+  } else
+    res.status(401).render("login", {
+      message: "You must be logged in to do that."
+    });
 });
 
 //Page that shows short-long url - with an edit button at bottom
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session["user_id"]]
-  };
-  res.render("urls_show", templateVars);
+  if (users[req.session["user_id"]]) {
+    let templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      user: users[req.session["user_id"]]
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(401).render("login", {
+      message: "You must be logged in to do that."
+    });
+  }
 });
 
-//Form submission to create the shortURL
+//Form submission to create a shortURL
 app.post("/urls", (req, res) => {
   let urlID = "";
   // Updating URL database with a shortURL:longURL pair
@@ -117,10 +123,14 @@ app.post("/urls", (req, res) => {
       );
     }
     res.redirect(`/urls/${urlID}`);
-  } else res.redirect("/login");
+  } else {
+    res.status(401).render("login", {
+      message: "You must be logged in to do that."
+    });
+  }
 });
 
-//Delete URL POST
+//Delete a short-long URL entry
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   if (
@@ -129,48 +139,58 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   ) {
     delete urlDatabase[shortURL];
     res.redirect("/urls/");
-  } else res.send(404).redirect("/login");
+  } else {
+    res.status(401).render("login", {
+      message: "You must be logged in to do that."
+    });
+  }
 });
 
-//Redirect to the website at longURL
+//Redirect to the external website (the longURL)
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
   res.redirect(longURL);
 });
 
-// Post for EDITING LONG URL submit form
+// Editing the long URL submit form
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const newLongURL = req.body.newLongURL;
   //If field is blank, keep refreshing page
+  //If user that owns the shortURL is logged in then,
   if (newLongURL === "") {
     res.redirect(`/urls/${shortURL}`);
-  }
-  //If user that owns the shortURL is logged in then,
-  if (
-    users[req.session["user_id"]] &&
-    users[req.session["user_id"]].id === urlDatabase[shortURL].userID
-  ) {
-    // Edge-case if new long URL is missing "http://", then add it in and submit the newLongURL.
-    if (newLongURL[0] === "h" || newLongURL[6] === "/") {
-      shortURL, newLongURL, users[req.session["user_id"]].id, urlDatabase;
+  } else {
+    if (
+      users[req.session["user_id"]] &&
+      users[req.session["user_id"]].id === urlDatabase[shortURL].userID
+    ) {
+      // Edge-case if new long URL is missing "http://", then add it in and submit the newLongURL.
+      if (newLongURL[0] === "h" || newLongURL[6] === "/") {
+        shortURL, newLongURL, users[req.session["user_id"]].id, urlDatabase;
+      } else {
+        editURL(
+          shortURL,
+          `http://${newLongURL}`,
+          users[req.session["user_id"]].id,
+          urlDatabase
+        );
+      }
+      res.redirect("/urls/");
     } else {
-      editURL(
-        shortURL,
-        `http://${newLongURL}`,
-        users[req.session["user_id"]].id,
-        urlDatabase
-      );
+      res.status(401).render("login", {
+        message: "You must be logged in to do that."
+      });
     }
-    res.redirect("/urls/");
-  } else res.redirect("/login");
+  }
 });
 
 app.get("/login", (req, res) => {
-  res.render("login");
+  res.render("login", { message: null });
 });
 
+// User can attempt a login
 app.post("/login", (req, res) => {
   let email = req.body.email;
   let pass = req.body.password;
@@ -180,23 +200,21 @@ app.post("/login", (req, res) => {
     req.session.user_id = userID; //Setting encrypted cookie as the userID
     res.redirect("/urls");
   } else {
-    res.status(403).send("Error 403: Incorrect email/password");
-    // res.render("error", 403);
+    res.status(403).render("login", {
+      message: "You must be logged in to do that."
+    });
   }
 });
 
+// User can logout from any page
 app.post("/logout", (req, res) => {
   req.session = null;
-  res.redirect("/urls/");
+  res.redirect("/login");
 });
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
-});
-
-//For the registration page
+//For registering a new email/pass
 app.get("/register", (req, res) => {
-  let templateVars = { user: users[req.session["user_id"]] };
+  let templateVars = { user: users[req.session["user_id"]], message: null };
   res.render("register", templateVars);
 });
 
@@ -206,7 +224,10 @@ app.post("/register", (req, res) => {
     !req.body.password[5] || // If password input is less than 6 chars
     isEmailDuplicate(req.body.email, users) // If email exists in system
   ) {
-    res.status(400).redirect("error");
+    res.status(400).render("register", {
+      message:
+        "Bad Email-Password combination. *Passwords must be at least 6 characters long* Email may already exist in database"
+    });
   } else {
     const randID = generateRandomString();
     users[randID] = {
@@ -215,27 +236,10 @@ app.post("/register", (req, res) => {
       password: bcrypt.hashSync(req.body.password, 10)
     };
     req.session.user_id = randID;
-    // fs.appendFile(
-    //   "users.js",
-    //   `{users[${randID}] = {id: ${randID}, email: ${req.body.email}, password: ${req.body.password}
-    // };`
-    // );
     res.redirect("/urls");
   }
 });
 
-// catch 400 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(400));
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
-
-  // render the error page
-  res.status(err.status || 500 || 400);
-  res.render("error");
+app.listen(PORT, () => {
+  console.log(`Example app listening on port ${PORT}!`);
 });
