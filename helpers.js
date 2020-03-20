@@ -7,7 +7,7 @@ const findUserID = function(email, users) {
       return users[key].id;
     }
   }
-  return false;
+  return undefined;
 };
 
 //Function to find matching URLs for specific UserID
@@ -34,7 +34,7 @@ const loginMatch = function(email, pass, users) {
   return false;
 };
 
-//Function to find if a duplicate email already exsists in the system
+//Function to find if a duplicate email already exists in the system
 const isEmailDuplicate = function(email, users) {
   for (let key in users) {
     if (email === users[key].email) {

@@ -66,13 +66,16 @@ app.get("/urls", (req, res) => {
   } else res.redirect("/login");
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+// Accessing these will show us what urls & usernames/passwords are in the database.
+// Meant for testing purposes only.
 
-app.get("/users.json", (req, res) => {
-  res.json(users);
-});
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
+
+// app.get("/users.json", (req, res) => {
+//   res.json(users);
+// });
 
 //Page to create a new short URL
 app.get("/urls/new", (req, res) => {
@@ -236,12 +239,3 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500 || 400);
   res.render("error");
 });
-
-// function findUserID(email) {
-//   for (let key in users) {
-//     if (email === users[key].email) {
-//       return users[key].id;
-//     }
-//   }
-//   return false;
-// }
