@@ -18,34 +18,33 @@
           </form>
           </nav>
         </div>
-          
     </header>
     <body>
         <main style="margin: 1em;">
-        <div class="form-group">
-            <div class="card-body text-center">
-                <h3>TinyApp - Login</h3>
-                <div class="card text-center">
-                    <div class="card-body">
-                        <div class="form-group">
-                        <form class="form-center" action="/login" method="POST">
-                        <label for="email">Email:</label>
-                        <input id="email" type="email" name="email" placeholder="email@site.com"/>
+            <div class="form-group">
+                <div class="card-body text-center">
+                    <h3>TinyApp - Login</h3>
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <div class="form-group">
+                            <form class="form-center" action="/login" method="POST">
+                            <label for="email">Email:</label>
+                            <input id="email" type="email" name="email" placeholder="email@site.com"/>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                    <label for="password">TinyApp Password:</label>
-                    <input id="password" type="password" name="password" placeholder="your password">
-                    <div>
-                    <button style="margin: 1em" type="submit" class="btn btn-primary">Login</button>
-                    </div>
-                        <font color="red">
-                        <h7><%= message %></h7>
-                        </font>
+                        <div>
+                        <label for="password">TinyApp Password:</label>
+                        <input id="password" type="password" name="password" placeholder="your password">
+                        <div>
+                        <button style="margin: 1em" type="submit" class="btn btn-primary">Login</button>
+                        </div>
+                            <font color="red">
+                            <h7><%= message %></h7>
+                            </font>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         </main>
    </body>
 </html>

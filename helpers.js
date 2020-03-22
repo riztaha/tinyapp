@@ -73,6 +73,22 @@ const editURL = function(id, longUrl, userId, urlDatabase) {
   };
 };
 
+//Helper function to see if user is logged in
+const userIsLoggedIn = function() {
+  if (users[req.session["user_id"]]) {
+    return true;
+  }
+  return false;
+};
+
+//Helper function to see if the URL submitted has HTTP:// or not
+const urlHasHttp = function() {
+  if (longURL[0] === "h" || longURL[6] === "/") {
+    return true;
+  }
+  return false;
+};
+
 module.exports = {
   findUserID,
   urlsForUser,
@@ -80,5 +96,7 @@ module.exports = {
   loginMatch,
   isEmailDuplicate,
   addURL,
-  editURL
+  editURL,
+  userIsLoggedIn,
+  urlHasHttp
 };

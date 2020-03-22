@@ -11,7 +11,9 @@ const {
   loginMatch,
   isEmailDuplicate,
   editURL,
-  addURL
+  addURL,
+  userIsLoggedIn,
+  urlHasHttp
 } = require("./helpers");
 
 app.set("view engine", "ejs");
@@ -62,7 +64,7 @@ app.get("/", (req, res) => {
 
 //Index listing all short/long urls.
 app.get("/urls", (req, res) => {
-  if (users[req.session["user_id"]]) {
+  if (userIsLoggedIn) {
     let templateVars = {
       urls: urlsForUser(users[req.session["user_id"]].id, urlDatabase), //Printing out only the urls for logged in user
       user: users[req.session["user_id"]]
@@ -76,7 +78,7 @@ app.get("/urls", (req, res) => {
 
 //Page to create a new short URL
 app.get("/urls/new", (req, res) => {
-  if (users[req.session["user_id"]]) {
+  if (userIsLoggedIn) {
     let templateVars = {
       user: users[req.session["user_id"]]
     };
@@ -89,7 +91,7 @@ app.get("/urls/new", (req, res) => {
 
 //Page that shows short-long url - with an edit button at bottom
 app.get("/urls/:shortURL", (req, res) => {
-  if (users[req.session["user_id"]]) {
+  if (userIsLoggedIn) {
     let templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
@@ -107,13 +109,13 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   let urlID = "";
   // Updating URL database with a shortURL:longURL pair
-  if (users[req.session["user_id"]]) {
+  if (userIsLoggedIn) {
     const longURL = req.body["longURL"];
     // For edge-cases with urls that are missing "http://" or that are empty
     if (longURL === "") {
       res.redirect(`/urls/new`);
     }
-    if (longURL[0] === "h" || longURL[6] === "/") {
+    if (urlHasHttp) {
       urlID = addURL(longURL, users[req.session["user_id"]].id, urlDatabase);
     } else {
       urlID = addURL(
@@ -134,7 +136,7 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   if (
-    users[req.session["user_id"]] &&
+    userIsLoggedIn &&
     users[req.session["user_id"]].id === urlDatabase[shortURL].userID
   ) {
     delete urlDatabase[shortURL];
@@ -163,12 +165,16 @@ app.post("/urls/:shortURL", (req, res) => {
     res.redirect(`/urls/${shortURL}`);
   } else {
     if (
-      users[req.session["user_id"]] &&
+      userIsLoggedIn &&
       users[req.session["user_id"]].id === urlDatabase[shortURL].userID
     ) {
-      // Edge-case if new long URL is missing "http://", then add it in and submit the newLongURL.
-      if (newLongURL[0] === "h" || newLongURL[6] === "/") {
-        shortURL, newLongURL, users[req.session["user_id"]].id, urlDatabase;
+      if (urlHasHttp) {
+        editURL(
+          shortURL,
+          newLongURL,
+          users[req.session["user_id"]].id,
+          urlDatabase
+        );
       } else {
         editURL(
           shortURL,
@@ -180,7 +186,7 @@ app.post("/urls/:shortURL", (req, res) => {
       res.redirect("/urls/");
     } else {
       res.status(401).render("login", {
-        message: "You must be logged in to do that."
+        message: "You do not own that short URL."
       });
     }
   }
@@ -201,7 +207,7 @@ app.post("/login", (req, res) => {
     res.redirect("/urls");
   } else {
     res.status(403).render("login", {
-      message: "You must be logged in to do that."
+      message: "Wrong email or password."
     });
   }
 });
