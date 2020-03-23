@@ -203,7 +203,7 @@ app.post("/login", (req, res) => {
 
 // User can logout from any page
 app.post("/logout", (req, res) => {
-  req.session = null;
+  req.session = null; //Clears the cookie
   res.redirect("/login");
 });
 
