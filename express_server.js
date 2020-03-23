@@ -115,7 +115,7 @@ app.post("/urls", (req, res) => {
     if (longURL === "") {
       res.redirect(`/urls/new`);
     }
-    if (urlHasHttp) {
+    if (urlHasHttp(longURL)) {
       urlID = addURL(longURL, users[req.session["user_id"]].id, urlDatabase);
     } else {
       urlID = addURL(
@@ -168,7 +168,8 @@ app.post("/urls/:shortURL", (req, res) => {
       userIsLoggedIn &&
       users[req.session["user_id"]].id === urlDatabase[shortURL].userID
     ) {
-      if (urlHasHttp) {
+      // Edge-case if new long URL is missing "http://", then add it in and submit the newLongURL.
+      if (urlHasHttp(newLongURL)) {
         editURL(
           shortURL,
           newLongURL,

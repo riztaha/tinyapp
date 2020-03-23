@@ -82,7 +82,7 @@ const userIsLoggedIn = function() {
 };
 
 //Helper function to see if the URL submitted has HTTP:// or not
-const urlHasHttp = function() {
+const urlHasHttp = function(longURL) {
   if (longURL[0] === "h" || longURL[6] === "/") {
     return true;
   }
