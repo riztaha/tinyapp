@@ -46,18 +46,6 @@ const users = {
   }
 };
 
-// Accessing these will show us what urls & usernames/passwords are in the database.
-// Meant for testing purposes only. Anyone evaluating this app can uncomment
-// And check the links to see if the app works properly.
-
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
-// app.get("/users.json", (req, res) => {
-//   res.json(users);
-// });
-
 app.get("/", (req, res) => {
   res.redirect("/urls/");
 });
