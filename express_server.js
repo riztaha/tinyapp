@@ -12,7 +12,6 @@ const {
   isEmailDuplicate,
   editURL,
   addURL,
-  userIsLoggedIn,
   urlHasHttp
 } = require("./helpers");
 
@@ -51,8 +50,9 @@ app.get("/", (req, res) => {
 });
 
 //Index listing all short/long urls.
+// users[req.session["user_id"]] is checking to see if the user is logged in via cookies.
 app.get("/urls", (req, res) => {
-  if (userIsLoggedIn) {
+  if (users[req.session["user_id"]]) {
     let templateVars = {
       urls: urlsForUser(users[req.session["user_id"]].id, urlDatabase), //Printing out only the urls for logged in user
       user: users[req.session["user_id"]]
@@ -60,26 +60,26 @@ app.get("/urls", (req, res) => {
     res.render("urls_index", templateVars);
   } else
     res.status(401).render("login", {
-      message: "You must be logged in to do that."
+      message: "You must be logged in to view the main page."
     });
 });
 
 //Page to create a new short URL
 app.get("/urls/new", (req, res) => {
-  if (userIsLoggedIn) {
+  if (users[req.session["user_id"]]) {
     let templateVars = {
       user: users[req.session["user_id"]]
     };
     res.render("urls_new", templateVars);
   } else
     res.status(401).render("login", {
-      message: "You must be logged in to do that."
+      message: "You must be logged in to create a tiny url."
     });
 });
 
 //Page that shows short-long url - with an edit button at bottom
 app.get("/urls/:shortURL", (req, res) => {
-  if (userIsLoggedIn) {
+  if (users[req.session["user_id"]]) {
     let templateVars = {
       shortURL: req.params.shortURL,
       longURL: urlDatabase[req.params.shortURL].longURL,
@@ -88,7 +88,7 @@ app.get("/urls/:shortURL", (req, res) => {
     res.render("urls_show", templateVars);
   } else {
     res.status(401).render("login", {
-      message: "You must be logged in to do that."
+      message: "You must be logged in to view this page."
     });
   }
 });
@@ -97,7 +97,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.post("/urls", (req, res) => {
   let urlID = "";
   // Updating URL database with a shortURL:longURL pair
-  if (userIsLoggedIn) {
+  if (users[req.session["user_id"]]) {
     const longURL = req.body["longURL"];
     // For edge-cases with urls that are missing "http://" or that are empty
     if (longURL === "") {
@@ -115,7 +115,7 @@ app.post("/urls", (req, res) => {
     res.redirect(`/urls/${urlID}`);
   } else {
     res.status(401).render("login", {
-      message: "You must be logged in to do that."
+      message: "You must be logged in to view the main page."
     });
   }
 });
@@ -124,14 +124,14 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   if (
-    userIsLoggedIn &&
+    users[req.session["user_id"]] &&
     users[req.session["user_id"]].id === urlDatabase[shortURL].userID
   ) {
     delete urlDatabase[shortURL];
     res.redirect("/urls/");
   } else {
     res.status(401).render("login", {
-      message: "You must be logged in to do that."
+      message: "Whoops! You must be logged in to do that."
     });
   }
 });
@@ -153,7 +153,7 @@ app.post("/urls/:shortURL", (req, res) => {
     res.redirect(`/urls/${shortURL}`);
   } else {
     if (
-      userIsLoggedIn &&
+      users[req.session["user_id"]] &&
       users[req.session["user_id"]].id === urlDatabase[shortURL].userID
     ) {
       // Edge-case if new long URL is missing "http://", then add it in and submit the newLongURL.
